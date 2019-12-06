@@ -1,0 +1,149 @@
+\documentclass[border=1in]{standalone}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{pgfplots}
+\usepackage{adjustbox}
+\usepackage{appendix}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[]{bnumexpr}
+\pgfplotsset{compat=1.15}
+\newcount\recurdepth
+
+\newcommand\storelabel[2]{\expandafter\xdef\csname label#1\endcsname{#2}}
+\newcommand\getlabel[1]{\csname label#1\endcsname}
+\newcommand{\absval}[1]{\ifnum#1<0 -\fi#1}
+
+\definecolor{ao}{rgb}{0.0, 0.0, 1.0}
+\definecolor{amber}{rgb}{1.0, 0.49, 0.0}
+\definecolor{ao green}{rgb}{0.0, 0.5, 0.0}
+\definecolor{americanrose}{rgb}{1.0, 0.01, 0.24}
+\definecolor{amethyst}{rgb}{0.6, 0.4, 0.8}
+\definecolor{auburn}{rgb}{0.43, 0.21, 0.1}
+
+\title{Fractal Neural Networks with Weight-Sharing}
+\author{Sam Earle}
+\begin{document}
+%\tableofcontents
+\newcount\nodewidth
+\nodewidth=48
+\newcount\ncols
+	\tikzset{equal/.style={draw, dotted, very thick, CadetBlue}}
+	\tikzset{joinlayer/.style={draw, dashed, very thick}}
+	\tikzset{down/.style={draw, ->, BrickRed ,very thick}}
+	\tikzset{up/.style={draw, ->, OliveGreen, very thick}}
+	\tikzset{conv/.style={draw, ->, very thick}}
+	\tikzset{convlabel/.style={anchor=west,inner sep=5, color=black}}
+	\tikzset{hidden/.style={rectangle, draw, minimum width=1cm, align=center, fill=gray, 
+	fill opacity=0.1}}
+	\tikzset{legendtext/.style={anchor=west,inner sep=10, color=black, text height=0.1mm}}
+
+\newcommand{\xscale}{1}
+\newcommand{\yscale}{3}
+\begin{tikzpicture}[scale=0.8]
+\matrix[at={(1.3,-2.2)}, minimum height=1, anchor=north west, font=\footnotesize]{
+\draw[conv] (0,0) -- node[legendtext] {Convolution $f$} (0.6,0);& \\
+\node [hidden, label=right: ($32\times32$) Activation Map] {};\\
+%\node [hidden, minimum width=\nodewidth/2, fill opacity=0.4, align=center, label=right: ($16\times16$) ''] at (12pt, 0){};  \\
+%\node [hidden, minimum width=\nodewidth/4, fill opacity=1,label=right:($8\times 8$) ''] at (18pt, 0){}; \\
+\draw[joinlayer] (0,0) -- node[legendtext] {Join Operation (el.-wise averaging)} (0.6,0);\\
+\draw[equal] (0,0) -- node[legendtext] {Equality} (0.6,0);\\
+};
+
+\newcommand{\coli}{black}
+\gdef\fracnet#1#2#3#4{
+    \edef\col{\number\numexpr#1\relax}%a+b
+    \edef\dep{\number\numexpr#2}%a+b
+    \edef\ypos{\number\numexpr#3\relax}
+    \edef\incol{\number\numexpr\ncols-\col\relax}%a+b
+    \edef\subcolh{\bnumexpr2^(\col)\relax}
+    \edef\maxdepth{\bnumexpr2^(\ncols-1)\relax}
+    \edef\coldepth{\bnumexpr\number2^(\ncols-\number\col)\relax}
+    \edef\yposI{\number\numexpr\ypos+\bnethe\subcolh\relax}
+    \edef\yposO{\number\numexpr\ypos-\bnethe\subcolh\relax}
+%\node[draw=none] at (\number\col*2 + 0.75, \ypos/\yscale) {\col, $\ypos$, \bnethe\subcolh, \bnethe\coldepth, \dep};
+	\edef\colname{\number\numexpr\col-1\relax}
+%\storelabel{\col-\yposI}{\aI}
+	\node[hidden, name=#4\col\yposO] at (\xscale*\number\col*2, \yposO/\yscale) {};
+    \edef\dblmaxdepth{\bnumexpr\maxdepth*2\relax}
+    \edef\firstdep{\bnumexpr\dblmaxdepth-\yposI\relax}
+    \ifnum\bnethe\firstdep=0\relax
+        \node[hidden, name=#4\col\yposI] at (\xscale*\number\col*2, \yposI/\yscale) {};
+	\fi
+	\pgfmathsetmacro\k{\col*10}
+	\pgfmathsetmacro\k{\k+40}
+    \ifnum\col=0\relax
+        \renewcommand{\coli}{ao}
+    \fi
+    \ifnum\col=1\relax
+        \renewcommand{\coli}{amber}
+    \fi
+    \ifnum\col=2\relax
+        \renewcommand{\coli}{ao green}
+    \fi
+    \ifnum\col=3\relax
+        \renewcommand{\coli}{americanrose}
+    \fi
+    \ifnum\col=4\relax
+        \renewcommand{\coli}{amethyst}
+    \fi
+    \ifnum\col=5\relax
+        \renewcommand{\coli}{auburn}
+    \fi
+	\draw[conv, color=\coli] (#4\col\yposI) -- node[convlabel] {$f_{\colname,\dep}$} (#4\col\yposO);
+\ifnum\col>1\relax
+	\begingroup
+	\edef\col{\number\numexpr\number\col-1\relax}%a+b
+	\edef\yposA{\number\numexpr\ypos+(\bnethe\subcolh/2)\relax}
+	\edef\yposB{\number\numexpr\ypos-(\bnethe\subcolh/2)\relax}
+	\edef\dep{\number\numexpr\dep*2\relax}
+	\edef\depA{\number\numexpr\dep\relax}
+	\edef\depB{\number\numexpr\dep+1\relax}
+	\fracnet{\number\col}{\depA}{\number\yposA}{#4}
+	\fracnet{\number\col}{\depB}{\number\yposB}{#4}
+	\endgroup
+\fi
+\ifnum\col>1\relax
+	\edef\nextcol{\number\numexpr\col-1\relax}
+	\draw[joinlayer] (#4\col\yposO) edge (#4\nextcol\yposO);
+	\ifnum\dep=0\relax
+		\draw[equal] (#4\col\yposI) edge (#4\nextcol\yposI);
+	\fi
+\fi
+}
+
+\gdef\FracNet#1#2{
+	\ncols=#1
+	\fracnet{#1}{0}{0}{#2}
+}
+
+
+
+
+\renewcommand\xscale{1}
+\renewcommand\yscale{5.2}
+\node[hidden, draw=none, fill opacity=0, text opacity =1, font=\large] at (2,1.3) {$F^1$};
+\FracNet{1}{A}
+\tikzset{hidden/.append style={xshift=75, yshift=-14}}
+\node[hidden, draw=none, fill opacity=0, text opacity =1, font=\large, yshift=14] at (3,1.3) {$F^2$};
+\FracNet{2}{B}
+\tikzset{hidden/.append style={xshift=125, yshift=-14}}
+\node[hidden, draw=none, fill opacity=0, text opacity =1, font=\large, yshift=42] at (4,.7) {$F^3$};
+\FracNet{3}{B}
+\tikzset{hidden/.append style={xshift=-125}}
+\tikzset{hidden/.append style={yshift=-165}}
+\renewcommand\yscale{5.2}
+\tikzset{hidden/.append style={xshift=35}}
+\tikzset{hidden/.append style={yshift=-80}}
+\node[hidden, draw=none, fill opacity=0, text opacity =1, font=\large, yshift=42] at (6,5.5) {$F^5$};
+\FracNet{5}{B}
+\tikzset{hidden/.append style={xshift=35}}
+\tikzset{hidden/.append style={yshift=-80}}
+\node[hidden, draw=none, fill opacity=0, text opacity =1, font=\normalsize, yshift=42] at (-3,5.5) {
+    intra-column sharing:\\
+    $\forall i, j, j' \quad f_{ij} = f_{ij'} $\\\\
+    inter-column sharing:\\
+    $\forall i, i', j, j' \quad f_{ij} = f_{i'j'} $\\
+};
+\end{tikzpicture}
+
+\end{document}

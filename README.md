@@ -7,4 +7,4 @@ This paper was presented at EXAG'19, an AIIDE workshop. It introduces the gym-ci
 
 ## Fractal Automata
 
-This unpublished, work-in-progress paper outlines how Neural Networks might be used to implement various Cellular-Automata. Specifically, we hand-code a recursive CNN to implement a "Physarum"-inspired, CA-based pathfinding algorithm, 
+This work-in-progress paper attempts to show how Neural Networks might be used to implement various Cellular-Automata. Specifically, we show how to hand-code a recursive CNN to implement a "Physarum"-inspired, CA-based pathfinding algorithm. (I'm doing something similar in the gym-city repo, in GoLMultiEnv, where Conway's Game of Life is implemented as a CNN). 
